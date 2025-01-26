@@ -1,0 +1,6 @@
+   import geoip2.database
+
+   def is_geo_mismatch(ip, expected_country):
+       reader = geoip2.database.Reader('GeoLite2-Country.mmdb')
+       response = reader.country(ip)
+       return response.country.iso_code != expected_country
