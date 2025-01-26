@@ -24,3 +24,19 @@ class ProtectionApp:
 
         self.suspicious_ips_text = tk.Text(master, height=10, width=50)
         self.suspicious_ips_text.pack()
+       
+        self.block_button = tk.Button(master, text="Заблокировать IP", command=self.block_ip)
+        self.block_button.pack()
+
+        self.unblock_button = tk.Button(master, text="Разблокировать IP", command=self.unblock_ip)
+        self.unblock_button.pack()
+
+    def activate_protection(self):
+        self.protection_active = True
+        self.update_status()
+        messagebox.showinfo("Успех", "Система защиты активирована.")
+
+    def deactivate_protection(self):
+        self.protection_active = False
+        self.update_status()
+        messagebox.showinfo("Успех", "Система защиты выключена.")
