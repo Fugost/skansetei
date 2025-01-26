@@ -1,0 +1,7 @@
+def analyze_activity(ip_address): 
+    if is_suspicious(ip_address):
+        send_email(
+            "Подозрительная активность обнаружена",
+            f"IP-адрес {ip_address} заблокирован за подозрительную активность.",
+            "recipient@example.com"
+         )
