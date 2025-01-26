@@ -1,0 +1,109 @@
+import smtplib
+from email.mime.text import MIMEText
+import subprocess
+import re
+from collections import defaultdict
+import time
+import tkinter as tk
+from tkinter import messagebox
+import threading
+
+EMAIL_HOST = 'smtp.example.com'
+EMAIL_PORT = 465
+FROM_EMAIL = 'your_email@example.com'
+EMAIL_PASSWORD = 'your_password'
+LOG_FILE = "/var/log/suricata/fast.log"
+request_log = defaultdict(list)
+
+class ProtectionApp:
+    def __init__(self, master):
+        self.master = master
+        master.title("Система защиты")
+        self.protection_active = False
+        self.recipient_email = ''
+
+        self.status_label = tk.Label(master, text="Защита: *выключена*", fg="red")
+        self.status_label.pack()
+
+        self.start_button = tk.Button(master, text="Активировать защиту", command=self.activate_protection)
+        self.start_button.pack()
+
+        self.stop_button = tk.Button(master, text="Выключить защиту", command=self.deactivate_protection)
+        self.stop_button.pack()
+
+        self.email_label = tk.Label(master, text="Введите email для уведомлений:")
+        self.email_label.pack()
+
+        self.email_entry = tk.Entry(master)
+        self.email_entry.pack()
+
+        self.suspicious_ips_text = tk.Text(master, height=10, width=50)
+        self.suspicious_ips_text.pack()
+
+    def send_email(self, subject, body):
+        if not self.recipient_email:
+            messagebox.showwarning("Ошибка", "Укажите адрес электронной почты для уведомлений.")
+            return
+        
+        msg = MIMEText(body)
+        msg['Subject'] = subject
+        msg['From'] = FROM_EMAIL
+        msg['To'] = self.recipient_email
+
+        try:
+            with smtplib.SMTP_SSL(EMAIL_HOST, EMAIL_PORT) as server:
+                server.login(FROM_EMAIL, EMAIL_PASSWORD)
+                server.sendmail(FROM_EMAIL, self.recipient_email, msg.as_string())
+        except Exception as e:
+            self.show_error(f"Ошибка отправки email: {e}")
+
+    def activate_protection(self):
+        self.recipient_email = self.email_entry.get().strip()
+        self.protection_active = True
+        self.update_status()
+        messagebox.showinfo("Успех", "Система защиты активирована.")
+        threading.Thread(target=self.monitor_suricata_log, daemon=True).start()
+
+    def deactivate_protection(self):
+        self.protection_active = False
+        self.update_status()
+        messagebox.showinfo("Успех", "Система защиты выключена.")
+
+    def update_status(self):
+        if self.protection_active:
+            self.status_label.config(text="Защита: *включена*", fg="green")
+        else:
+            self.status_label.config(text="Защита: *выключена*", fg="red")
+
+    def show_suspicious_ip(self, ip):
+        self.suspicious_ips_text.insert(tk.END, ip + "\n")
+
+    def block_ip(self, ip):
+        try:
+            subprocess.run(["sudo", "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"], check=True)
+            self.send_email("Подозрительная активность обнаружена", f"IP-адрес {ip} заблокирован.")
+        except subprocess.CalledProcessError as e:
+            self.show_error(f"Не удалось заблокировать IP {ip}: {e}")
+
+    def show_error(self, message):
+        self.suspicious_ips_text.insert(tk.END, message + "\n")
+
+    def monitor_suricata_log(self):
+        with open(LOG_FILE, "r") as log:
+            log.seek(0, 2)
+            while self.protection_active:
+                line = log.readline()
+                if not line:
+                    time.sleep(0.1)
+                    continue
+                
+                match = re.search(r'(\d+\.\d+\.\d+\.\d+)', line)
+                if match:
+                    src_ip = match.group(1)
+                    self.show_suspicious_ip(src_ip)
+                    self.block_ip(src_ip)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ProtectionApp(root)
+    root.mainloop()
