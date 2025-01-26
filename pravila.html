@@ -10,4 +10,16 @@ import requests
    def is_blacklisted(ip):
        response = requests.get(f"https://api.blacklistcheck.com/{ip}")
        return response.json().get('blacklisted', False)
+
+   from collections import defaultdict
+   from datetime import datetime, timedelta
+
+   requests_log = defaultdict(list)
+
+   def log_request(ip):
+       now = datetime.now()
+       requests_log[ip].append(now)
+       # Удаляем старые запросы
+       requests_log[ip] = [time for time in requests_log[ip] if time > now - timedelta(minutes=1)]
+       return len(requests_log[ip]) > 100  # Пример: более 100 запросов за минуту
    
