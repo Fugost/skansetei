@@ -1,1 +1,26 @@
-gg
+import tkinter as tk
+from tkinter import messagebox
+
+class ProtectionApp:
+    def __init__(self, master):
+        self.master = master
+        master.title("Система защиты")
+        self.protection_active = False
+
+        self.status_label = tk.Label(master, text="Защита: *выключена*", fg="red")
+        self.status_label.pack()
+
+        self.start_button = tk.Button(master, text="Активировать защиту", command=self.activate_protection)
+        self.start_button.pack()
+
+        self.stop_button = tk.Button(master, text="Выключить защиту", command=self.deactivate_protection)
+        self.stop_button.pack()
+
+        self.email_label = tk.Label(master, text="Введите email для уведомлений:")
+        self.email_label.pack()
+
+        self.email_entry = tk.Entry(master)
+        self.email_entry.pack()
+
+        self.suspicious_ips_text = tk.Text(master, height=10, width=50)
+        self.suspicious_ips_text.pack()
