@@ -4,3 +4,10 @@
        reader = geoip2.database.Reader('GeoLite2-Country.mmdb')
        response = reader.country(ip)
        return response.country.iso_code != expected_country
+
+import requests
+
+   def is_blacklisted(ip):
+       response = requests.get(f"https://api.blacklistcheck.com/{ip}")
+       return response.json().get('blacklisted', False)
+   
