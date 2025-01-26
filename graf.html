@@ -40,3 +40,36 @@ class ProtectionApp:
         self.protection_active = False
         self.update_status()
         messagebox.showinfo("Успех", "Система защиты выключена.")
+
+    def update_status(self):
+        if self.protection_active:
+            self.status_label.config(text="Защита: *включена*", fg="green")
+        else:
+            self.status_label.config(text="Защита: *выключена*", fg="red")
+
+    def block_ip(self):
+        selected_ip = self.suspicious_ips_text.get("1.0", "end-1c").strip()
+        if selected_ip:
+            if self.protection_active:
+                # Логика блокировки IP
+                messagebox.showinfo("Успех", f"IP-адрес {selected_ip} заблокирован.")
+            else:
+                messagebox.showwarning("Ошибка", "Защита выключена. Активируйте защиту.")
+        else:
+            messagebox.showwarning("Ошибка", "Введите IP-адрес для блокировки.")
+
+    def unblock_ip(self):
+        selected_ip = self.suspicious_ips_text.get("1.0", "end-1c").strip()
+        if selected_ip:
+            if self.protection_active:
+                # Логика разблокировки IP
+                messagebox.showinfo("Успех", f"IP-адрес {selected_ip} разблокирован.")
+            else:
+                messagebox.showwarning("Ошибка", "Защита выключена. Активируйте защиту.")
+        else:
+            messagebox.showwarning("Ошибка", "Введите IP-адрес для разблокировки.")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = ProtectionApp(root)
+    root.mainloop()
